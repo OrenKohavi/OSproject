@@ -7,8 +7,6 @@ CXXFLAGS = -Wall -Wextra -Werror -pedantic -Wshadow -Wnon-virtual-dtor -Wold-sty
            -Wmisleading-indentation -Wduplicated-cond -Wduplicated-branches \
            -Wlogical-op -Wnull-dereference -Wuseless-cast -Wdouble-promotion
 
-CXXFLAGS += -march=sandybridge
-
 # Sources
 SRCS = $(wildcard *.cpp)
 
@@ -22,7 +20,7 @@ TARGET = build
 all: $(TARGET)
 
 bootsector_code.bin: bootsector_code.s
-	as -o bootsector_code.o bootsector_code.s
+	as -g -o bootsector_code.o bootsector_code.s
 	ld -o bootsector_code.bin -Ttext 0x7C00 --oformat binary bootsector_code.o
 
 $(TARGET): $(OBJS) bootsector_code.bin

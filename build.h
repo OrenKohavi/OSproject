@@ -2,7 +2,8 @@
 #include <fstream>
 #include <cstdlib>
 #include <cstring>
-#include "common.h"
+
+#define BOOTSECTOR_CODE_FILENAME "bootsector_code.bin"
 
 /* Constants */
 const size_t SECTOR_SIZE = 512;

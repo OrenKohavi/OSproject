@@ -1,1 +1,0 @@
-#define BOOTSECTOR_CODE_FILENAME "bootsector_code.bin"

@@ -6,13 +6,17 @@
 _start:
     mov $0x7C00, %sp #Setup the stack (We have until 0x500 overwritable)
     mov $msg_welcome, %ax
-    call bios_print_string #Print 'Hello, World!'
-    #call delay
+    call bios_print_string #Print 'Hello, World!''
+    mov $0x400, %ax
+    call delay
     mov $msg_loading_os, %ax
     call bios_print_string
-    hlt
+    call load_os
+    mov $msg_finished_loading_os, %ax
+    call bios_print_string
 
 # **BIOS PRINT STRING**
+# Takes a string pointer in %ax to print using BIOS syscalls
 # Preserves all registers except %ax
 bios_print_string:
     push %bx
@@ -35,31 +39,34 @@ _bios_print_string_exit:
     ret
 
 # **DELAY**
-# preserves all registers
+# Takes a number in %ax determining how long to delay
+# preserves all registers except ax
 delay:
-    push %ax
+    xchg %ax, %dx
     push %bx
     push %cx
-    mov $0xFFFF, %ax
-_delay_level1_loop:
-    mov $0xFFFF, %bx
-    dec %ax
-_delay_level2_loop:
-    mov $0xFFFF, %cx
-_delay_level3_loop:
+    push %dx
+    mov %dx, %ax
+    mov %dx, %bx
+    mov %dx, %cx
+_delay_loop:
     dec %cx
-    jnz _delay_level3_loop #End loop 3
+    jnz _delay_loop #End inntermost loop
+    mov %dx, %cx
     dec %bx
-    jnz _delay_level2_loop #End loop 2
+    jnz _delay_loop #End middle loop
+    mov %dx, %bx
     dec %ax
-    jnz _delay_level1_loop #End loop 1
-    #If we get here we are done delaying
+    jnz _delay_loop #End outermost loop
+    #If we get here we are done delaying, ax is zero
+    pop %dx
     pop %cx
     pop %bx
-    pop %ax
     ret
 
 msg_welcome:
     .asciz "Bootloader Loaded - Hello, World!\r\n"
 msg_loading_os:
-    .asciz "Attempting to load OS into memory..."
+    .asciz "Attempting to load OS into memory... "
+msg_done:
+    .asciz "[DONE]\r\n"

@@ -32,6 +32,10 @@ int main(int argc, char* argv[]) {
     writePartitionTable(disk);
     writeMBRSignature(disk);
 
+    /* --------- WRITE THE 'OS' TO THE DRIVE --------- */
+
+    //TODO
+
     /* --------- WRITE BOOT SECTOR DATA TO THE FILE --------- */
 
     outfile.write(disk, DISK_SIZE);
