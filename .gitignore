@@ -1,0 +1,6 @@
+bootsector_code.bin
+bootsector_code.o
+build
+disk.img
+build.o
+.vscode/*
