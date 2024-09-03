@@ -22,6 +22,7 @@ const size_t CHS_SIZE = 3;
 const size_t LBA_SIZE = 4;
 
 const uint8_t PARTITION_TYPE_FAT32_LBA = 0x0C;
+const size_t FILESYSTEM_START_SECTOR = 5;
 
 const size_t NUM_SECTORS = 1000;
 const size_t DISK_SIZE = SECTOR_SIZE * NUM_SECTORS;

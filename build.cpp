@@ -84,7 +84,7 @@ void writePartitionTable(char* bootsector){
     main_partition.partition_type = PARTITION_TYPE_FAT32_LBA;
     memset(main_partition.CHS_start, 0xFF, CHS_SIZE);
     memset(main_partition.CHS_end, 0xFF, CHS_SIZE);
-    main_partition.LBA_start = 0x1;
+    main_partition.LBA_start = FILESYSTEM_START_SECTOR;
     main_partition.LBA_end = NUM_SECTORS - 1;
 
     memcpy(bootsector + PARTITION_TABLE_OFFSET, &main_partition, PARTITION_TABLE_ENTRY_SIZE);

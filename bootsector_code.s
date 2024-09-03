@@ -6,14 +6,22 @@
 _start:
     mov $0x7C00, %sp #Setup the stack (We have until 0x500 overwritable)
     mov $msg_welcome, %ax
-    call bios_print_string #Print 'Hello, World!''
+    call bios_print_string
+    mov $msg_loading_secondstage, %ax
+    call bios_print_string
     mov $0x400, %ax
     call delay
-    mov $msg_loading_os, %ax
+    call load_secondstage
+    mov $msg_done, %ax
     call bios_print_string
-    call load_os
-    mov $msg_finished_loading_os, %ax
+    mov $msg_longmode, %ax
     call bios_print_string
+    mov $0x400, %ax
+    call delay
+    call setup_longmode
+    mov $msg_done, %ax
+    call bios_print_string
+    hlt
 
 # **BIOS PRINT STRING**
 # Takes a string pointer in %ax to print using BIOS syscalls
@@ -64,9 +72,34 @@ _delay_loop:
     pop %bx
     ret
 
+# **LOAD SECONDSTAGE**
+# Loads the second stage bootloader into memory, assumed to occupy the second/third/fourth/fifth sectors (first sector is boot sector)
+# Preserves all registers
+load_secondstage:
+    pusha #easy to save all registers
+    mov $0x0204, %ax #ah=02 for selecting the BIOS read sectors function, al=04 to read 4 sectors.
+    mov $0x0002, %cx #ch=0 (cylinder number 0), cl=2 (sector number 2, they are one-indexed)
+    mov $0x0080, %dx #dh=0 (head number 0), dl=0x80 to select the first hard drive
+    ### BIOS Syscall loads into ES:BX (so ES * 16 + BX) - Let's load to 0x8000, so set %es to 0x800
+    mov $0x800, %bx
+    mov %bx, %es
+    mov $0, %bx
+    int    $0x13 #trigger BIOS interrupt
+    # TODO: Error handling
+    popa #easy restore all registers
+    ret
+
+# **SETUP LONGMODE**
+# Switches the processor into long mode from real mode, then jumps to the address in TODO
+# Does not preserve any registers
+setup_longmode:
+    ret
+
 msg_welcome:
     .asciz "Bootloader Loaded - Hello, World!\r\n"
-msg_loading_os:
-    .asciz "Attempting to load OS into memory... "
+msg_loading_secondstage:
+    .asciz "Attempting to load second-stage bootloader into memory... "
+msg_longmode:
+    .asciz "Attempting to switch system into long (32-bit) mode... "
 msg_done:
     .asciz "[DONE]\r\n"
