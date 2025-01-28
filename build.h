@@ -4,6 +4,7 @@
 #include <cstring>
 
 #define BOOTSECTOR_CODE_FILENAME "bootsector_code.bin"
+#define SECOND_STAGE_BOOTLOADER_FILENAME "second_stage_bootloader.bin"
 
 /* Constants */
 const size_t SECTOR_SIZE = 512;
@@ -27,10 +28,13 @@ const size_t FILESYSTEM_START_SECTOR = 5;
 const size_t NUM_SECTORS = 1000;
 const size_t DISK_SIZE = SECTOR_SIZE * NUM_SECTORS;
 
+const size_t SECOND_STAGE_BOOTLOADER_SECTOR_COUNT = 4;
+
 /* Function Prototypes */
 bool writeBootloader(char* bootsector);
 void writePartitionTable(char* bootsector);
 void writeMBRSignature(char* bootsector);
+bool writeSecondStageBootloader(char* disk);
 
 
 /* Structs */

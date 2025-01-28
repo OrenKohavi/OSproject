@@ -14,11 +14,11 @@ _start:
     call load_secondstage
     mov $msg_done, %ax
     call bios_print_string
-    mov $msg_longmode, %ax
+    mov $msg_protected_mode, %ax
     call bios_print_string
     mov $0x400, %ax
     call delay
-    call setup_longmode
+    call setup_protected_mode
     mov $msg_done, %ax
     call bios_print_string
     hlt
@@ -89,17 +89,58 @@ load_secondstage:
     popa #easy restore all registers
     ret
 
-# **SETUP LONGMODE**
-# Switches the processor into long mode from real mode, then jumps to the address in TODO
+# **SETUP PROTECTED MODE**
+# Switches the processor into protected mode from real mode, then long jumps to 0x8000
 # Does not preserve any registers
-setup_longmode:
-    ret
+setup_protected_mode:
+    cli #Disable interupts
+
+    #Enable the A20 line
+    in $0x92, %al
+    or $2, %al
+    out %al, $0x92
+
+    #Set segments and load the gdt
+
+    lgdt gdt_descriptor     # Load GDT descriptor
+
+    mov $msg_switching_now, %ax;
+    call bios_print_string
+
+    # Switch to protected mode
+    mov %cr0, %eax
+    or $1, %al
+    mov %eax, %cr0
+
+    #long jmp to 0x8000 where the second-stage bootloader is
+    ljmp $0x08, $0x8000
 
 msg_welcome:
     .asciz "Bootloader Loaded - Hello, World!\r\n"
 msg_loading_secondstage:
     .asciz "Attempting to load second-stage bootloader into memory... "
-msg_longmode:
-    .asciz "Attempting to switch system into long (32-bit) mode... "
+msg_protected_mode:
+    .asciz "Attempting to switch system into protected (32-bit) mode... "
 msg_done:
     .asciz "[DONE]\r\n"
+msg_switching_now:
+    .asciz ">>> SWITCHING NOW!\r\n"
+gdt:
+    .quad 0x0000000000000000 #zero-th entry in the GDT (must be null)
+    #Setup the first entry in the GDT, for code segment
+    .word 0xFFFF #bytes 0/1 are the lower part of the limit (so should be max-ed)
+    .word 0x0000 #bytes 2/3 are the lower part of the base address (so should be zero)
+    .byte 0x00   #byte 4 is also lower part of the base address
+    .byte 0x9B   #byte 5 is access byte, so 0b10011011 to show that it is executable with ring 0
+    .byte 0xCF   #byte 6 is flags and the upper part of the limit. 0xF for limit, 0b1100=0xC for a page-granularity 32-bit segment
+    .byte 0x00   #byte 7 is the upper part of the base address, so should be zero
+    #Second entry in the GDT can basically be the same, except for data (so the access byte is different)
+    .word 0xFFFF
+    .word 0x0000
+    .byte 0x00
+    .byte 0x93   #0b1001 0011 (Grows upward, data segment, ring 0, read/write enabled)
+    .byte 0xCF
+    .byte 0x00
+gdt_descriptor:
+    .word gdt_descriptor - gdt - 1    # Size of GDT
+    .long gdt                         # Address of GDT

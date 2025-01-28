@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    /* --------- POPULATE THE BOOT SECTOR WITH DATA --------- */
+    /* --------- POPULATE THE BOOT SECTORS WITH DATA --------- */
     char disk[DISK_SIZE] = {0};
     memset(disk, 0x12, DISK_SIZE);
     //Fill the disk with 0x12 just so I can tell what's been initialized
@@ -32,9 +32,10 @@ int main(int argc, char* argv[]) {
     writePartitionTable(disk);
     writeMBRSignature(disk);
 
-    /* --------- WRITE THE 'OS' TO THE DRIVE --------- */
-
-    //TODO
+    if (!writeSecondStageBootloader(disk)){
+        std::cerr << "Failed to write second stage bootloader to image" << std::endl;
+        return 1;
+    }
 
     /* --------- WRITE BOOT SECTOR DATA TO THE FILE --------- */
 
@@ -46,6 +47,20 @@ int main(int argc, char* argv[]) {
 
     outfile.close();
     return 0;
+}
+
+bool writeSecondStageBootloader(char* disk){
+    disk += SECTOR_SIZE; //Now we are at sector 1
+
+    std::ifstream second_stage_bootloader_file(SECOND_STAGE_BOOTLOADER_FILENAME, std::ios::binary);
+    if (!second_stage_bootloader_file) {
+        std::cerr << "Could not open second stage bootloader file" << std::endl;
+        return false;
+    }
+    second_stage_bootloader_file.read(disk, SECTOR_SIZE * SECOND_STAGE_BOOTLOADER_SECTOR_COUNT);
+
+    return true;
+    
 }
 
 bool writeBootloader(char* bootsector){

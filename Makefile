@@ -23,7 +23,11 @@ bootsector_code.bin: bootsector_code.s
 	as -g -o bootsector_code.o bootsector_code.s
 	ld -o bootsector_code.bin -Ttext 0x7C00 --oformat binary bootsector_code.o
 
-$(TARGET): $(OBJS) bootsector_code.bin
+second_stage_bootloader.bin: second_stage_bootloader.s
+	as -g -o second_stage_bootloader.o second_stage_bootloader.s
+	ld -o second_stage_bootloader.bin -Ttext 0x8000 --oformat binary second_stage_bootloader.o
+
+$(TARGET): $(OBJS) bootsector_code.bin second_stage_bootloader.bin
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS)
 
 %.o: %.cpp
